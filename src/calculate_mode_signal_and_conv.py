@@ -50,9 +50,10 @@ def calculate_conv(
     """
     Nx, Ny = N
     A = []
-    W_peaks = sig.find_peaks(spectr[y_col][int(x_min):int(x_max)])[0]
+    W_peaks = sig.find_peaks(
+        spectr[y_col][int(x_min):int(x_max)])[0] + int(x_min)
     for i in W_peaks:
-        A.append(spectr[y_col][int(x_min):int(x_max):1][i])
+        A.append(spectr[y_col][i])
     W = np.where(spectr[y_col] == max(A))[0][0]
     t0_index = int(t0 / 0.00004)
     t_end = np.round(t0 + M * 2 * np.pi / W, 6)
@@ -84,13 +85,15 @@ def modulate_signal(spectr,
     x_max = int(x_max)
     modul_signal = []
     A = []
-    W = sig.find_peaks(spectr[y_col][x_min:x_max])[0]
+    W = sig.find_peaks(spectr[y_col][x_min:x_max])[0] + x_min
+    print(W)
     phi_0_list = []
     for i in W:
         phi_0 = np.random.normal(0, np.pi * 2)
         phi_0_list.append(phi_0)
-        A.append(spectr[y_col][x_min:x_max:1][i])
+        A.append(spectr[y_col][i])
     A = np.array(A)
+    print(A)
     W = np.array(W)
     denominator = np.sum(A)
     # Генерируем белый шум на каждом шаге t с амплитудой A0
