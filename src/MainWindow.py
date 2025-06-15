@@ -347,7 +347,29 @@ class MainWindow(QMainWindow):
             )
             return
         fig = GraphBuilder.plot_conv_mod(X_i, Y_i, M, t0, t_end, W, N[0], True)
-        self.conv_window_mod = ConvPlotWindow(fig, self)
+
+        # --- Новый функционал: callback для перестроения по частоте (смоделированный сигнал) ---
+        def recalc_conv_mod(freq: float):
+            try:
+                X_i, Y_i, _, t_end = calculate_conv(N,
+                                                    S,
+                                                    t0,
+                                                    M,
+                                                    self.df,
+                                                    y_col,
+                                                    x_min,
+                                                    x_max,
+                                                    force_W=freq)
+                return GraphBuilder.plot_conv_mod(X_i, Y_i, M, t0, t_end, freq,
+                                                  N[0], True)
+            except Exception as e:
+                self.show_error(f"Ошибка пересчёта свёртки: {e}")
+                return None
+
+        self.conv_window_mod = ConvPlotWindow(fig,
+                                              self,
+                                              recalc_callback=recalc_conv_mod,
+                                              default_freq=W)
         self.conv_window_mod.show()
 
     def create_conv_orig_plot(self) -> None:
@@ -378,5 +400,27 @@ class MainWindow(QMainWindow):
             return
         fig = GraphBuilder.plot_conv_mod(X_i, Y_i, M, t0, t_end, W, N[0],
                                          False)
-        self.conv_window_orig = ConvPlotWindow(fig, self)
+
+        # --- Новый функционал: callback для перестроения по частоте ---
+        def recalc_conv_orig(freq: float):
+            try:
+                # freq — это W, частота для свёртки
+                X_i, Y_i, _, t_end = calculate_conv(N,
+                                                    S,
+                                                    t0,
+                                                    M,
+                                                    self.df,
+                                                    y_col,
+                                                    x_min,
+                                                    x_max,
+                                                    force_W=freq)
+                return GraphBuilder.plot_conv_mod(X_i, Y_i, M, t0, t_end, freq,
+                                                  N[0], False)
+            except Exception as e:
+                self.show_error(f"Ошибка пересчёта свёртки: {e}")
+                return None
+
+        # --- Передаём callback и частоту по умолчанию ---
+        self.conv_window_orig = ConvPlotWindow(
+            fig, self, recalc_callback=recalc_conv_orig, default_freq=W)
         self.conv_window_orig.show()
